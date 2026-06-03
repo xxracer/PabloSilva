@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { SectionHead } from "./section-head";
 import type { Program } from "@/lib/types";
 
@@ -19,11 +20,15 @@ export function Programs({ programs }: { programs: Program[] }) {
           return (
             <article key={p.id} className={`card${isFeature ? " card--feature" : ""}`}>
               {p.image && (
-                <div
+                <Image
+                  src={p.image}
+                  alt={p.title}
+                  width={1200}
+                  height={800}
+                  sizes="(min-width: 760px) 50vw, 100vw"
+                  quality={65}
+                  loading="lazy"
                   className="card__media"
-                  style={{ backgroundImage: `url(${p.image})` }}
-                  role="img"
-                  aria-label={p.title}
                 />
               )}
               <div className="card__body">
@@ -81,11 +86,13 @@ const programsCss = `
 }
 .card__media {
   position: relative;
-  background-size: cover;
-  background-position: center;
-  min-height: 240px;
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  object-position: center;
   filter: grayscale(20%) contrast(1.02);
   transition: transform .8s var(--ease-out-soft), filter .8s var(--ease-out-soft);
+  display: block;
 }
 .card__media::after {
   content: ""; position: absolute; inset: 0;

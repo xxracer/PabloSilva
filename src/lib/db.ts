@@ -276,7 +276,7 @@ function seed() {
         tagline: "Life-Long Skills for Our Youngest BJJ Enthusiasts!",
         description:
           "Our Little Champions program, for kids ages 3-6, focuses on developing a strong foundation necessary for BJJ. In addition to teaching jiu-jitsu techniques, we have a special facility with all types of equipment to help these little ones work on developing their strength, balance/coordination, motor skills, and agility.",
-        image: "/images/programs/little-champs.png",
+        image: "/images/programs/little-champs.jpg",
         ctaLabel: "Book A Trial", ctaHref: "/contact",
         ctaLabel2: null, ctaHref2: null,
         details: [
@@ -310,7 +310,7 @@ function seed() {
         tagline: "Prepare Your Child for Success in Competitive BJJ!",
         description:
           "For those kids looking to take their jiu-jitsu to the next level, we offer our Kids Competition Program. With the Kids Competition Package, your child will have the option to attend 7 classes a week! Kids enrolled in the Competition Program receive more detailed instruction on competition-tested techniques as well as strength and conditioning classes on our second floor both in a small group format. The Competition Program is a fast-track and surefire way to increase your child's confidence, strength, coordination, and jiu-jitsu knowledge.",
-        image: "/images/programs/kids-competition.png",
+        image: "/images/programs/kids-competition.jpg",
         ctaLabel: "Apply for Competition Team", ctaHref: "/contact",
         ctaLabel2: null, ctaHref2: null,
         details: [

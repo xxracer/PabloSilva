@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { GalleryItem } from "@/lib/types";
 
 export function Gallery({ items }: { items: GalleryItem[] }) {
@@ -25,21 +26,39 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
       </header>
 
       <div className="gallery__strip">
-        {cells.map((c, i) => (
-          <figure
-            key={c.id ?? i}
-            className={`gallery__cell gallery__cell--${c.width ?? "sm"}`}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={c.url}
-              alt={c.caption ?? ""}
-              className="gallery__img"
-              loading="lazy"
-            />
-            {c.caption && <figcaption className="gallery__cap">{c.caption}</figcaption>}
-          </figure>
-        ))}
+        {cells.map((c, idx) => {
+          const w = c.width ?? "sm";
+          const dims =
+            w === "lg" ? { w: 1600, h: 1000 } :
+            w === "md" ? { w: 1200, h: 900 } :
+                         { w: 900,  h: 1200 };
+          // The whole strip is below the fold, but it's small (5 cells) and the
+          // user expects gallery images to be there on first scroll on mobile.
+          // Eager-load everything so there's no pop-in.
+          return (
+            <figure
+              key={c.id}
+              className={`gallery__cell gallery__cell--${w}`}
+            >
+              <Image
+                src={c.url}
+                alt={c.caption ?? ""}
+                width={dims.w}
+                height={dims.h}
+                sizes={
+                  w === "lg" ? "(min-width: 880px) 58vw, 100vw" :
+                  w === "md" ? "(min-width: 880px) 42vw, 100vw" :
+                               "(min-width: 880px) 33vw, (min-width: 480px) 50vw, 100vw"
+                }
+                quality={65}
+                loading="eager"
+                fetchPriority={idx < 2 ? "high" : "auto"}
+                className="gallery__img"
+              />
+              {c.caption && <figcaption className="gallery__cap">{c.caption}</figcaption>}
+            </figure>
+          );
+        })}
       </div>
       <style>{galleryCss}</style>
     </section>
@@ -73,18 +92,16 @@ const galleryCss = `
      - md  → 4:3           (almost square, works for any photo)
      - sm  → 3:4 portrait  (use with portrait / vertical photos)
 */
-.gallery__cell { margin: 0; }
+.gallery__cell { margin: 0; position: relative; overflow: hidden; border-radius: 12px; }
 .gallery__cell--lg { grid-column: span 7; aspect-ratio: 16 / 10; }
 .gallery__cell--md { grid-column: span 5; aspect-ratio: 4 / 3; }
 .gallery__cell--sm { grid-column: span 4; aspect-ratio: 3 / 4; }
 
 .gallery__img {
-  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  border-radius: 12px;
   filter: grayscale(30%) contrast(1.02);
   transition: filter .6s var(--ease-out-soft), transform .6s var(--ease-out-soft);
 }
@@ -109,7 +126,6 @@ const galleryCss = `
   transition: opacity .3s var(--ease-out-soft), transform .3s var(--ease-out-soft);
   pointer-events: none;
 }
-.gallery__cell { position: relative; overflow: hidden; border-radius: 12px; }
 .gallery__cell:hover .gallery__cap { opacity: 1; transform: translateY(0); }
 
 .link-arrow {
@@ -126,14 +142,14 @@ const galleryCss = `
 
 @media (max-width: 880px) {
   .gallery__strip { grid-template-columns: repeat(2, 1fr) !important; }
-  .gallery__cell--lg,
+  .gallery__cell--lg { grid-column: span 2; aspect-ratio: 16 / 10; }
   .gallery__cell--md { grid-column: span 2; aspect-ratio: 4 / 3; }
   .gallery__cell--sm { grid-column: span 1; aspect-ratio: 3 / 4; }
 }
 @media (max-width: 480px) {
   .gallery__strip { grid-template-columns: 1fr !important; }
-  .gallery__cell--lg,
-  .gallery__cell--md,
-  .gallery__cell--sm { grid-column: span 1; aspect-ratio: 4 / 3; }
+  .gallery__cell--lg { grid-column: span 1; aspect-ratio: 16 / 10; }
+  .gallery__cell--md { grid-column: span 1; aspect-ratio: 4 / 3; }
+  .gallery__cell--sm { grid-column: span 1; aspect-ratio: 3 / 4; }
 }
 `;

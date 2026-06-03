@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getHero } from "@/lib/queries";
 import type { HeroData } from "@/lib/types";
 
@@ -10,9 +11,15 @@ export function Hero({ data }: { data?: HeroData }) {
   return (
     <section className="hero" id="top">
       <div className="hero__bg" aria-hidden="true">
-        <div
+        <Image
+          src={portrait}
+          alt=""
+          fill
+          loading="eager"
+          fetchPriority="high"
+          sizes="100vw"
+          quality={70}
           className="hero__bg-img"
-          style={{ backgroundImage: `url(${portrait})` }}
         />
         <div className="hero__bg-veil" />
         <div className="hero__bg-grain" />
@@ -84,10 +91,10 @@ const heroCss = `
   background: #1a1714;
   color: #faf6ee;
 }
-.hero__bg { position: absolute; inset: 0; z-index: 0; }
+.hero__bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
 .hero__bg-img {
-  position: absolute; inset: 0;
-  background-size: cover; background-position: center 30%;
+  object-fit: cover;
+  object-position: center 30%;
   filter: grayscale(35%) contrast(1.05) brightness(0.55);
   transform: scale(1.05);
   animation: heroDrift 24s ease-in-out infinite alternate;

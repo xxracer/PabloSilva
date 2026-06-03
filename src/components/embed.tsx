@@ -1,10 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import { detectEmbed, type EmbedResult } from "@/lib/embeds";
 
 /**
  * Renders the right kind of embed for a given URL.
- * - Image: <img>
+ * - Image: next/image (responsive, AVIF/WebP)
  * - Instagram / YouTube / Vimeo: iframe, loaded immediately
  *   (the browser's own `loading="lazy"` waits for viewport)
  */
@@ -24,8 +25,15 @@ export function Embed({
   if (meta.kind === "image") {
     return (
       <figure className={`embed embed--image ${className}`} style={{ aspectRatio: aspect }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={meta.src} alt={caption ?? ""} loading="lazy" />
+        <Image
+          src={meta.src}
+          alt={caption ?? ""}
+          fill
+          sizes="(min-width: 880px) 50vw, 100vw"
+          quality={70}
+          loading="lazy"
+          className="embed__img"
+        />
         {caption ? <figcaption>{caption}</figcaption> : null}
         <style>{imageCss}</style>
       </figure>
@@ -57,7 +65,7 @@ export function Embed({
 
 const imageCss = `
 .embed--image { margin: 0; position: relative; overflow: hidden; border-radius: 12px; background: #2a2521; }
-.embed--image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.embed--image .embed__img { object-fit: cover; }
 .embed--image figcaption {
   position: absolute; bottom: 12px; left: 12px; right: 12px;
   font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;

@@ -6,6 +6,8 @@
  */
 "use client";
 
+import Image from "next/image";
+
 const EMBED_SRC =
   "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4110.774841681183!2d-95.47461522395402!3d29.705127034566964!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8640c1d436062ce7%3A0x83139cd884d39239!2sPablo%20Silva%20Brazilian%20Jiu%20Jitsu%20HQ!5e1!3m2!1ses!2sve!4v1780437294581!5m2!1ses!2sve";
 
@@ -22,7 +24,7 @@ export function MapPin() {
         sandbox="allow-scripts allow-same-origin allow-popups"
       />
       <span className="psmap__pin" aria-hidden="true">
-        <img src="/images/logo.png" alt="" />
+        <Image src="/images/logo.png" alt="" width={30} height={30} />
       </span>
       <style>{psMapCss}</style>
     </div>

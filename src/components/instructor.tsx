@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Instructor } from "@/lib/types";
 
 export function Instructor({ instructors }: { instructors: Instructor[] }) {
@@ -12,11 +13,15 @@ export function Instructor({ instructors }: { instructors: Instructor[] }) {
       <div className="instructor__inner">
         <div className="instructor__media">
           {head.image && (
-            <div
+            <Image
+              src={head.image}
+              alt={head.name}
+              fill
+              loading="eager"
+              fetchPriority="high"
+              sizes="(min-width: 880px) 50vw, 100vw"
+              quality={70}
               className="instructor__portrait"
-              style={{ backgroundImage: `url(${head.image})` }}
-              role="img"
-              aria-label={head.name}
             />
           )}
           <div className="instructor__badge">
@@ -52,11 +57,15 @@ export function Instructor({ instructors }: { instructors: Instructor[] }) {
           {others.map((i) => (
             <article key={i.id} className="coach">
               {i.image && (
-                <div
+                <Image
+                  src={i.image}
+                  alt={i.name}
+                  width={480}
+                  height={600}
+                  sizes="(min-width: 880px) 33vw, 100vw"
+                  quality={65}
+                  loading="lazy"
                   className="coach__photo"
-                  style={{ backgroundImage: `url(${i.image})` }}
-                  role="img"
-                  aria-label={i.name}
                 />
               )}
               <div className="coach__body">
@@ -106,9 +115,8 @@ const instructorCss = `
   background: #2a2521;
 }
 .instructor__portrait {
-  position: absolute; inset: 0;
-  background-size: cover;
-  background-position: center 20%;
+  object-fit: cover;
+  object-position: center 20%;
   filter: grayscale(20%) contrast(1.05) brightness(0.9);
   transition: filter 1s var(--ease-out-soft), transform 1s var(--ease-out-soft);
 }
@@ -125,6 +133,7 @@ const instructorCss = `
   border-radius: 12px;
   display: flex; align-items: center; gap: 14px;
   border: 1px solid rgba(255,255,255,0.12);
+  z-index: 1;
 }
 .instructor__badge-num {
   font-family: var(--font-display);
@@ -191,16 +200,18 @@ const instructorCss = `
   display: flex; flex-direction: column;
 }
 .coach__photo {
+  width: 100%;
+  height: auto;
   aspect-ratio: 4/5;
-  background-size: cover;
-  background-position: center;
+  object-fit: cover;
+  object-position: center;
   filter: grayscale(30%) contrast(1.02);
+  display: block;
 }
 .coach__body { padding: 1.1rem 1.2rem 1.3rem; }
 .coach__body h3 {
   font-family: var(--font-display);
-  font-size: 1.2rem;
-  font-weight: 500;
+  font-size: 1.2rem; font-weight: 500;
   letter-spacing: -0.01em;
   margin: 0 0 4px;
   color: #faf6ee;

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Visit } from "@/components/visit";
 import { getInstructors } from "@/lib/queries";
 
@@ -31,12 +32,17 @@ export default function InstructorsPage() {
           {instructors.map((i) => (
             <article key={i.id} className="instructor-card">
               {i.image && (
-                <div
-                  className="instructor-card__media"
-                  style={{ backgroundImage: `url(${i.image})` }}
-                  role="img"
-                  aria-label={i.name}
-                />
+                <div className="instructor-card__media-wrap">
+                  <Image
+                    src={i.image}
+                    alt={i.name}
+                    fill
+                    sizes="(min-width: 880px) 40vw, 100vw"
+                    quality={70}
+                    loading="lazy"
+                    className="instructor-card__media"
+                  />
+                </div>
               )}
               <div className="instructor-card__body">
                 <h2 className="instructor-card__name">{i.name}</h2>
@@ -117,11 +123,14 @@ const instructorsCss = `
   display: grid;
   grid-template-columns: 1fr 1.3fr;
 }
-.instructor-card__media {
-  background-size: cover;
-  background-position: center;
-  filter: grayscale(20%) contrast(1.02);
+.instructor-card__media-wrap {
+  position: relative;
   min-height: 380px;
+}
+.instructor-card__media {
+  object-fit: cover;
+  object-position: center;
+  filter: grayscale(20%) contrast(1.02);
 }
 .instructor-card__body {
   padding: clamp(1.5rem, 3vw, 2.5rem);
@@ -165,6 +174,6 @@ const instructorsCss = `
 @media (max-width: 880px) {
   .instructors__grid { grid-template-columns: 1fr; }
   .instructor-card { grid-template-columns: 1fr; min-height: 0; }
-  .instructor-card__media { min-height: 280px; }
+  .instructor-card__media-wrap { min-height: 280px; }
 }
 `;

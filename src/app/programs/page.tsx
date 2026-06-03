@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Marquee } from "@/components/marquee";
 import { Visit } from "@/components/visit";
 import { Philosophy } from "@/components/philosophy";
@@ -56,7 +57,7 @@ export default function ProgramsPage() {
 
         <div className="programs__list">
           {programs.map((p, i) => (
-            <ProgramRow key={p.id} p={p} flip={i % 2 === 1} />
+            <ProgramRow key={p.id} p={p} flip={i % 2 === 1} priority={i === 0} />
           ))}
         </div>
       </section>
@@ -107,16 +108,20 @@ export default function ProgramsPage() {
   );
 }
 
-function ProgramRow({ p, flip }: { p: Program; flip: boolean }) {
+function ProgramRow({ p, flip, priority }: { p: Program; flip: boolean; priority?: boolean }) {
   return (
     <article className={`prow${flip ? " prow--flip" : ""}`}>
       <div className="prow__media">
         {p.image && (
-          <div
+          <Image
+            src={p.image}
+            alt={p.title}
+            fill
+            sizes="(min-width: 880px) 50vw, 100vw"
+            quality={70}
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : undefined}
             className="prow__media-img"
-            style={{ backgroundImage: `url(${p.image})` }}
-            role="img"
-            aria-label={p.title}
           />
         )}
         <span className="prow__age">{p.ageRange}</span>
@@ -243,9 +248,8 @@ const programsPageCss = `
   box-shadow: 0 24px 60px -20px rgba(26,23,20,0.25);
 }
 .prow__media-img {
-  position: absolute; inset: 0;
-  background-size: cover;
-  background-position: center;
+  object-fit: cover;
+  object-position: center;
   filter: grayscale(15%) contrast(1.02);
   transition: transform 1s var(--ease-out-soft), filter 1s var(--ease-out-soft);
 }
