@@ -8,7 +8,7 @@ import { getSite, setSite } from "@/lib/db";
 import { hasAdminCookie } from "@/lib/auth";
 
 const ALLOWED = new Set([
-  "hero", "marquee", "philosophy", "visit", "contact", "meta",
+  "hero", "marquee", "philosophy", "visit", "contact", "meta", "instagram_feed",
 ]);
 
 export async function GET(

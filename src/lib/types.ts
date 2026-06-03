@@ -147,3 +147,8 @@ export type NavLink = {
   label: string;
   href: string;
 };
+
+export type InstagramFeedItem = {
+  url: string;
+  caption: string;
+};

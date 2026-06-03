@@ -1,7 +1,13 @@
+/**
+ * Academy hours — the open/closed times shown on the home page and on
+ * the /schedule and /contact pages.
+ */
 "use client";
 
 import { useEffect, useState } from "react";
-import { H1, Card, Lbl, Row, TextInput, NumberInput, SaveBar } from "../ui";
+import {
+  SectionHeader, Card, Lbl, Row, TextInput, NumberInput, VisibleToggle, SaveBar,
+} from "../ui";
 
 type Item = { id: string; day: string; hours: string; sort: number; visible: number };
 
@@ -22,15 +28,16 @@ export default function HoursEditor() {
   }
   async function save() {
     if (!a) return;
-    await fetch(`/api/admin/hours/${a.id}`, {
+    const r = await fetch(`/api/admin/hours/${a.id}`, {
       method: "PUT", headers: { "content-type": "application/json" },
       body: JSON.stringify(a),
     });
+    if (!r.ok) throw new Error("Save failed");
   }
   async function add() {
     const r = await fetch("/api/admin/hours", {
       method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ day: "New day", hours: "", sort: list!.length + 10, visible: 1 }),
+      body: JSON.stringify({ day: "New day", hours: "Closed", sort: list!.length + 10, visible: 1 }),
     });
     const j = await r.json();
     setList([...list!, j.row]);
@@ -44,46 +51,76 @@ export default function HoursEditor() {
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "1.2rem" }}>
-      <aside>
-        <H1>Hours</H1>
-        <button onClick={add} type="button" style={newBtn}>+ New row</button>
-        {list.map(x => (
-          <button key={x.id} onClick={() => setActiveId(x.id)} type="button" style={{ ...itemBtn, background: activeId === x.id ? "#1a1916" : "transparent", color: activeId === x.id ? "#f4ede0" : "#cdc7b8" }}>
-            {x.day || "(untitled)"}
-          </button>
-        ))}
-      </aside>
-      {a ? (
-        <div>
-          <H1>{a.day}</H1>
-          <Card>
-            <Row>
-              <div style={{ flex: 1 }}>
-                <Lbl>Day label</Lbl>
-                <TextInput value={a.day} onChange={v => update({ day: v })} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <Lbl>Hours</Lbl>
-                <TextInput value={a.hours} onChange={v => update({ hours: v })} />
-              </div>
-              <div style={{ width: 90 }}>
-                <Lbl>Sort</Lbl>
-                <NumberInput value={a.sort} onChange={v => update({ sort: v })} />
-              </div>
-            </Row>
-          </Card>
-          <div style={{ display: "flex", gap: ".8rem" }}>
-            <button onClick={save} type="button" style={saveBtn}>Save</button>
-            <button onClick={() => remove(a.id)} type="button" style={delBtn}>Delete</button>
+    <div>
+      <SectionHeader
+        title="Academy hours"
+        where="The 'academy hours' block on the home page and the /schedule and /contact pages."
+        intro="One row per day or day range. The default three are Mon–Fri, Saturday, and Sunday (closed)."
+      />
+
+      <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "1.2rem" }}>
+        <aside>
+          <button onClick={add} type="button" style={newBtn}>+ New row</button>
+          {list.map(x => (
+            <button key={x.id} onClick={() => setActiveId(x.id)} type="button" style={{
+              ...itemBtn,
+              background: activeId === x.id ? "#1a1916" : "transparent",
+              color: activeId === x.id ? "#f4ede0" : "#cdc7b8",
+              opacity: x.visible ? 1 : .4,
+            }}>
+              {x.day || "(untitled)"}
+            </button>
+          ))}
+        </aside>
+
+        {a ? (
+          <div>
+            <Card>
+              <Row>
+                <div style={{ flex: 1 }}>
+                  <Lbl hint="e.g. 'Mon – Fri' or 'Monday'.">Day label</Lbl>
+                  <TextInput value={a.day} onChange={v => update({ day: v })} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <Lbl hint="e.g. '7:00 AM – 7:30 PM' or 'Closed'.">Hours</Lbl>
+                  <TextInput value={a.hours} onChange={v => update({ hours: v })} />
+                </div>
+                <div style={{ width: 110 }}>
+                  <Lbl hint="Order in the list. Smaller = first.">Order</Lbl>
+                  <NumberInput value={a.sort} onChange={v => update({ sort: v })} />
+                </div>
+              </Row>
+              <Row>
+                <div style={{ flex: 1 }}>
+                  <Lbl hint="Show this row on the site, or hide it temporarily.">Show on the site</Lbl>
+                  <VisibleToggle value={a.visible} onChange={v => update({ visible: v })} />
+                </div>
+              </Row>
+            </Card>
+            <div style={{ display: "flex", gap: ".8rem", alignItems: "center" }}>
+              <SaveBar onSave={save} label="Save this row" />
+              <button onClick={() => remove(a.id)} type="button" style={delBtn}>Delete</button>
+            </div>
           </div>
-        </div>
-      ) : <p style={{ opacity: .6 }}>No row selected.</p>}
+        ) : <p style={{ opacity: .6 }}>No row selected.</p>}
+      </div>
     </div>
   );
 }
 
-const newBtn: React.CSSProperties = { width: "100%", background: "transparent", color: "#cdc7b8", border: "1px dashed #2a2a28", borderRadius: 8, padding: ".5rem .9rem", cursor: "pointer", fontSize: ".85rem", marginBottom: ".7rem" };
-const itemBtn: React.CSSProperties = { display: "block", width: "100%", textAlign: "left", border: 0, borderRadius: 8, padding: ".55rem .7rem", fontSize: ".9rem", cursor: "pointer", marginBottom: 2 };
-const saveBtn: React.CSSProperties = { background: "var(--color-bronze, #8c6a3d)", color: "var(--color-bone, #f4ede0)", border: 0, borderRadius: 10, padding: ".75rem 1.4rem", fontWeight: 600, cursor: "pointer" };
-const delBtn: React.CSSProperties = { background: "transparent", color: "#a77070", border: 0, padding: ".5rem .9rem", cursor: "pointer", fontSize: ".9rem" };
+const newBtn: React.CSSProperties = {
+  width: "100%", background: "transparent", color: "#cdc7b8",
+  border: "1px dashed #2a2a28", borderRadius: 8,
+  padding: ".5rem .9rem", cursor: "pointer", fontSize: ".85rem",
+  marginBottom: ".7rem", fontFamily: "inherit",
+};
+const itemBtn: React.CSSProperties = {
+  display: "block", width: "100%", textAlign: "left",
+  border: 0, borderRadius: 8, padding: ".55rem .7rem",
+  fontSize: ".9rem", cursor: "pointer", marginBottom: 2,
+  fontFamily: "inherit",
+};
+const delBtn: React.CSSProperties = {
+  background: "transparent", color: "#a77070", border: 0,
+  padding: ".5rem .9rem", cursor: "pointer", fontSize: ".9rem", fontFamily: "inherit",
+};

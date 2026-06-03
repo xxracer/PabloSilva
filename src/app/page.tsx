@@ -5,10 +5,11 @@ import { Programs } from "@/components/programs";
 import { Instructor } from "@/components/instructor";
 import { Quotes } from "@/components/quotes";
 import { Gallery } from "@/components/gallery";
+import { InstagramFeed } from "@/components/instagram-feed";
 import { Visit } from "@/components/visit";
 import {
   getHero, getMarquee, getPhilosophy, getPrograms,
-  getInstructors, getTestimonials, getGallery, getVisit,
+  getInstructors, getTestimonials, getGallery, getInstagramFeed, getVisit,
 } from "@/lib/queries";
 import type { Metadata } from "next";
 
@@ -30,6 +31,7 @@ export default function HomePage() {
   const instructors = getInstructors();
   const testimonials = getTestimonials();
   const gallery = getGallery();
+  const instagram = getInstagramFeed();
   const visit = getVisit();
 
   return (
@@ -41,6 +43,7 @@ export default function HomePage() {
       <Instructor instructors={instructors} />
       <Quotes items={testimonials} />
       <Gallery items={gallery} />
+      <InstagramFeed items={instagram} />
       <Visit data={visit} />
     </>
   );

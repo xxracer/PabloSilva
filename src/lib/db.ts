@@ -139,7 +139,7 @@ export function setSite(key: string, value: unknown): void {
 }
 
 // ─── Seed defaults (idempotent) ─────────────────────────────────
-const SEED_VERSION = "1";
+const SEED_VERSION = "2";
 function seed() {
   // Fast exit if this seed version has already been applied to the DB.
   // Prevents the concurrent build workers from racing on UNIQUE constraints.
@@ -247,6 +247,20 @@ function seed() {
       for (const [k, v] of Object.entries(obj)) ins.run(k, JSON.stringify(v));
     });
     tx(defaults);
+  }
+
+  // Ensure instagram_feed exists. Idempotent — only inserts if missing,
+  // so the client can edit and re-save without being clobbered.
+  const feedRow = db.prepare("SELECT value FROM site WHERE key = 'instagram_feed'").get();
+  if (!feedRow) {
+    const defaultFeed = [
+      { url: "https://www.instagram.com/p/DAb4F7GPGxC/", caption: "" },
+      { url: "https://www.instagram.com/p/DFAOXcKuaFt/", caption: "" },
+      { url: "https://www.instagram.com/p/C-mxJD9uIXr/", caption: "" },
+      { url: "https://www.instagram.com/p/C3LDR_yuUE0/", caption: "" },
+    ];
+    db.prepare("INSERT INTO site (key, value) VALUES ('instagram_feed', ?)")
+      .run(JSON.stringify(defaultFeed));
   }
 
   const pCount = db.prepare("SELECT COUNT(*) as c FROM programs").get() as { c: number };
@@ -387,10 +401,10 @@ function seed() {
     );
     const rows = [
       { id: "g-1", sort: 0, kind: "image", url: "/images/hero-competition.jpg", caption: "2024 · IBJJF Waco Open", width: "lg" },
-      { id: "g-2", sort: 1, kind: "image", url: "/images/training-1.jpg", caption: "Morning open mat", width: "sm" },
-      { id: "g-3", sort: 2, kind: "image", url: "/images/training-2.jpg", caption: "Champions & Teens", width: "sm" },
-      { id: "g-4", sort: 3, kind: "image", url: "/images/training-3.jpg", caption: "Little Champions class", width: "md" },
-      { id: "g-5", sort: 4, kind: "image", url: "/images/gi-detail.jpg", caption: "Gi details", width: "sm" },
+      { id: "g-2", sort: 1, kind: "image", url: "/images/bjj-adults-1.jpg", caption: "Adult BJJ · live roll", width: "sm" },
+      { id: "g-3", sort: 2, kind: "image", url: "/images/bjj-adults-2.jpg", caption: "Drilling side control", width: "sm" },
+      { id: "g-4", sort: 3, kind: "image", url: "/images/bjj-kids.jpg", caption: "Little Champions · kids class", width: "md" },
+      { id: "g-5", sort: 4, kind: "image", url: "/images/bjj-bow.jpg", caption: "Dojo etiquette", width: "sm" },
     ];
     const tx = db.transaction(() => {
       for (const r of rows) ins.run(r.id, r.sort, r.kind, r.url, r.caption, r.width);

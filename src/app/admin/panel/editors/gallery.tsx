@@ -1,17 +1,37 @@
+/**
+ * Gallery editor — the photo grid on the home page. Each photo has a
+ * caption (shown on hover), a size (lg / md / sm) that controls how
+ * much space the photo takes in the asymmetric grid, and a kind
+ * (image / instagram / video) for future expansion.
+ */
 "use client";
 
 import { useEffect, useState } from "react";
-import { H1, Card, Lbl, Row, TextInput, NumberInput, ImageInput, SaveBar } from "../ui";
+import {
+  SectionHeader, Card, Lbl, Row, TextInput, NumberInput, Select, ImageInput, SaveBar, VisibleToggle,
+} from "../ui";
 
-type Item = { id: string; title: string; image: string; caption: string; sort: number; visible: number };
+type Item = {
+  id: string; sort: number; kind: "image" | "instagram" | "video";
+  url: string; caption: string; width: "sm" | "md" | "lg"; visible: number;
+};
 
 export default function GalleryEditor() {
   const [list, setList] = useState<Item[] | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   useEffect(() => {
     fetch("/api/admin/gallery_items").then(r => r.json()).then(j => {
-      setList(j.rows);
-      if (j.rows[0]) setActiveId(j.rows[0].id);
+      const rows: Item[] = (j.rows as any[]).map((r) => ({
+        id: r.id,
+        sort: r.sort ?? 0,
+        kind: r.kind ?? "image",
+        url: r.url ?? "",
+        caption: r.caption ?? "",
+        width: r.width ?? "sm",
+        visible: r.visible ?? 1,
+      }));
+      setList(rows);
+      if (rows[0]) setActiveId(rows[0].id);
     });
   }, []);
   if (!list) return <p>Loading…</p>;
@@ -22,15 +42,19 @@ export default function GalleryEditor() {
   }
   async function save() {
     if (!a) return;
-    await fetch(`/api/admin/gallery_items/${a.id}`, {
+    const r = await fetch(`/api/admin/gallery_items/${a.id}`, {
       method: "PUT", headers: { "content-type": "application/json" },
       body: JSON.stringify(a),
     });
+    if (!r.ok) throw new Error("Save failed");
   }
   async function add() {
     const r = await fetch("/api/admin/gallery_items", {
       method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ title: "New photo", image: "", caption: "", sort: list!.length + 10, visible: 1 }),
+      body: JSON.stringify({
+        kind: "image", url: "/images/gi-detail.jpg",
+        caption: "New photo", width: "sm", sort: list!.length + 10, visible: 1,
+      }),
     });
     const j = await r.json();
     setList([...list!, j.row]);
@@ -44,46 +68,97 @@ export default function GalleryEditor() {
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "1.2rem" }}>
-      <aside>
-        <H1>Gallery</H1>
-        <button onClick={add} type="button" style={newBtn}>+ New photo</button>
-        {list.map(x => (
-          <button key={x.id} onClick={() => setActiveId(x.id)} type="button" style={{ ...itemBtn, background: activeId === x.id ? "#1a1916" : "transparent", color: activeId === x.id ? "#f4ede0" : "#cdc7b8" }}>
-            {x.title || "(untitled)"}
-          </button>
-        ))}
-      </aside>
-      {a ? (
-        <div>
-          <H1>{a.title}</H1>
-          <Card>
-            <Row>
-              <div style={{ flex: 1 }}>
-                <Lbl>Title</Lbl>
-                <TextInput value={a.title} onChange={v => update({ title: v })} />
-              </div>
-              <div style={{ width: 90 }}>
-                <Lbl>Sort</Lbl>
-                <NumberInput value={a.sort} onChange={v => update({ sort: v })} />
-              </div>
-            </Row>
-            <Lbl>Image</Lbl>
-            <ImageInput value={a.image} onChange={v => update({ image: v })} />
-            <Lbl>Caption</Lbl>
-            <TextInput value={a.caption} onChange={v => update({ caption: v })} />
-          </Card>
-          <div style={{ display: "flex", gap: ".8rem" }}>
-            <button onClick={save} type="button" style={saveBtn}>Save</button>
-            <button onClick={() => remove(a.id)} type="button" style={delBtn}>Delete</button>
+    <div>
+      <SectionHeader
+        title="Gallery"
+        where="The asymmetric photo grid on the home page (between the testimonials and the Instagram feed)."
+        intro="Mix large, medium and small photos for a BJJ-magazine feel. Use BJJ-themed shots: training, competition, gi details, the academy, students of all ages. Captions appear on hover."
+      />
+
+      <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "1.2rem" }}>
+        <aside>
+          <button onClick={add} type="button" style={newBtn}>+ New photo</button>
+          {list.map(x => (
+            <button
+              key={x.id} onClick={() => setActiveId(x.id)} type="button"
+              style={{
+                ...itemBtn,
+                background: activeId === x.id ? "#1a1916" : "transparent",
+                color: activeId === x.id ? "#f4ede0" : "#cdc7b8",
+                opacity: x.visible ? 1 : .4,
+              }}
+            >
+              {x.caption || x.url || "(untitled)"}
+            </button>
+          ))}
+        </aside>
+        {a ? (
+          <div>
+            <Card>
+              <Row>
+                <div style={{ flex: 2 }}>
+                  <Lbl hint="Short caption shown on hover (e.g. 'Morning open mat', 'Champions class').">Caption</Lbl>
+                  <TextInput value={a.caption} onChange={v => update({ caption: v })} />
+                </div>
+                <div style={{ width: 110 }}>
+                  <Lbl hint="Order in the grid. Smaller = first.">Order</Lbl>
+                  <NumberInput value={a.sort} onChange={v => update({ sort: v })} />
+                </div>
+              </Row>
+              <Lbl hint="Upload a new photo or paste an image URL.">Image</Lbl>
+              <ImageInput value={a.url} onChange={v => update({ url: v })} />
+              <Row>
+                <div style={{ flex: 1 }}>
+                  <Lbl hint="How much space this photo takes in the asymmetric grid AND the aspect ratio of its frame. Pick the size that matches your photo's shape so nothing gets cropped: lg = wide 16:10 (landscape), md = 4:3 (almost square), sm = 3:4 portrait.">Size in grid</Lbl>
+                  <Select
+                    value={a.width}
+                    onChange={v => update({ width: v as "sm" | "md" | "lg" })}
+                    options={[
+                      { label: "Large · 16:10 wide (landscape)", value: "lg" },
+                      { label: "Medium · 4:3 (square-ish)", value: "md" },
+                      { label: "Small · 3:4 portrait (vertical)", value: "sm" },
+                    ]}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <Lbl hint="What the source is.">Kind</Lbl>
+                  <Select
+                    value={a.kind}
+                    onChange={v => update({ kind: v as "image" | "instagram" | "video" })}
+                    options={[
+                      { label: "Image", value: "image" },
+                      { label: "Instagram", value: "instagram" },
+                      { label: "Video", value: "video" },
+                    ]}
+                  />
+                </div>
+              </Row>
+              <Lbl hint="Show this photo on the site, or hide it.">Show on the site</Lbl>
+              <VisibleToggle value={a.visible} onChange={v => update({ visible: v })} />
+            </Card>
+            <div style={{ display: "flex", gap: ".8rem", alignItems: "center" }}>
+              <SaveBar onSave={save} label="Save photo" />
+              <button onClick={() => remove(a.id)} type="button" style={delBtn}>Delete</button>
+            </div>
           </div>
-        </div>
-      ) : <p style={{ opacity: .6 }}>No photo selected.</p>}
+        ) : <p style={{ opacity: .6 }}>No photo selected.</p>}
+      </div>
     </div>
   );
 }
 
-const newBtn: React.CSSProperties = { width: "100%", background: "transparent", color: "#cdc7b8", border: "1px dashed #2a2a28", borderRadius: 8, padding: ".5rem .9rem", cursor: "pointer", fontSize: ".85rem", marginBottom: ".7rem" };
-const itemBtn: React.CSSProperties = { display: "block", width: "100%", textAlign: "left", border: 0, borderRadius: 8, padding: ".55rem .7rem", fontSize: ".9rem", cursor: "pointer", marginBottom: 2 };
-const saveBtn: React.CSSProperties = { background: "var(--color-bronze, #8c6a3d)", color: "var(--color-bone, #f4ede0)", border: 0, borderRadius: 10, padding: ".75rem 1.4rem", fontWeight: 600, cursor: "pointer" };
-const delBtn: React.CSSProperties = { background: "transparent", color: "#a77070", border: 0, padding: ".5rem .9rem", cursor: "pointer", fontSize: ".9rem" };
+const newBtn: React.CSSProperties = {
+  width: "100%", background: "transparent", color: "#cdc7b8",
+  border: "1px dashed #2a2a28", borderRadius: 8, padding: ".5rem .9rem",
+  cursor: "pointer", fontSize: ".85rem", marginBottom: ".7rem", fontFamily: "inherit",
+};
+const itemBtn: React.CSSProperties = {
+  display: "block", width: "100%", textAlign: "left",
+  border: 0, borderRadius: 8, padding: ".55rem .7rem",
+  fontSize: ".9rem", cursor: "pointer", marginBottom: 2, fontFamily: "inherit",
+  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+};
+const delBtn: React.CSSProperties = {
+  background: "transparent", color: "#a77070", border: 0,
+  padding: ".5rem .9rem", cursor: "pointer", fontSize: ".9rem", fontFamily: "inherit",
+};

@@ -1,7 +1,14 @@
+/**
+ * Testimonials editor — the quotes carousel on the home page. Each
+ * testimonial has a name, a context (e.g. 'Adult BJJ student, 2 years'),
+ * and the quote itself.
+ */
 "use client";
 
 import { useEffect, useState } from "react";
-import { H1, Card, Lbl, Row, TextInput, TextArea, NumberInput, SaveBar } from "../ui";
+import {
+  SectionHeader, Card, Lbl, Row, TextInput, TextArea, NumberInput, SaveBar, VisibleToggle,
+} from "../ui";
 
 type Item = { id: string; name: string; role: string; quote: string; sort: number; visible: number };
 
@@ -22,10 +29,11 @@ export default function TestimonialsEditor() {
   }
   async function save() {
     if (!a) return;
-    await fetch(`/api/admin/testimonials/${a.id}`, {
+    const r = await fetch(`/api/admin/testimonials/${a.id}`, {
       method: "PUT", headers: { "content-type": "application/json" },
       body: JSON.stringify(a),
     });
+    if (!r.ok) throw new Error("Save failed");
   }
   async function add() {
     const r = await fetch("/api/admin/testimonials", {
@@ -44,48 +52,72 @@ export default function TestimonialsEditor() {
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "1.2rem" }}>
-      <aside>
-        <H1>Testimonials</H1>
-        <button onClick={add} type="button" style={newBtn}>+ New quote</button>
-        {list.map(x => (
-          <button key={x.id} onClick={() => setActiveId(x.id)} type="button" style={{ ...itemBtn, background: activeId === x.id ? "#1a1916" : "transparent", color: activeId === x.id ? "#f4ede0" : "#cdc7b8" }}>
-            {x.name || "(untitled)"}
-          </button>
-        ))}
-      </aside>
-      {a ? (
-        <div>
-          <H1>{a.name}</H1>
-          <Card>
-            <Row>
-              <div style={{ flex: 1 }}>
-                <Lbl>Name</Lbl>
-                <TextInput value={a.name} onChange={v => update({ name: v })} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <Lbl>Role / context</Lbl>
-                <TextInput value={a.role} onChange={v => update({ role: v })} />
-              </div>
-              <div style={{ width: 90 }}>
-                <Lbl>Sort</Lbl>
-                <NumberInput value={a.sort} onChange={v => update({ sort: v })} />
-              </div>
-            </Row>
-            <Lbl>Quote</Lbl>
-            <TextArea value={a.quote} onChange={v => update({ quote: v })} rows={4} />
-          </Card>
-          <div style={{ display: "flex", gap: ".8rem" }}>
-            <button onClick={save} type="button" style={saveBtn}>Save</button>
-            <button onClick={() => remove(a.id)} type="button" style={delBtn}>Delete</button>
+    <div>
+      <SectionHeader
+        title="Testimonials"
+        where="The quotes carousel on the home page (between the gallery and the Instagram feed)."
+        intro="Aim for 3–6 testimonials. Each one is just a name, a short context, and the quote."
+      />
+
+      <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "1.2rem" }}>
+        <aside>
+          <button onClick={add} type="button" style={newBtn}>+ New quote</button>
+          {list.map(x => (
+            <button
+              key={x.id} onClick={() => setActiveId(x.id)} type="button"
+              style={{
+                ...itemBtn,
+                background: activeId === x.id ? "#1a1916" : "transparent",
+                color: activeId === x.id ? "#f4ede0" : "#cdc7b8",
+                opacity: x.visible ? 1 : .4,
+              }}
+            >{x.name || "(untitled)"}</button>
+          ))}
+        </aside>
+        {a ? (
+          <div>
+            <Card>
+              <Row>
+                <div style={{ flex: 1 }}>
+                  <Lbl hint="The student's full name.">Name</Lbl>
+                  <TextInput value={a.name} onChange={v => update({ name: v })} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <Lbl hint="Short context line shown under the name, e.g. 'Adult BJJ · 2 years'.">Role / context</Lbl>
+                  <TextInput value={a.role} onChange={v => update({ role: v })} />
+                </div>
+                <div style={{ width: 110 }}>
+                  <Lbl hint="Order in the carousel. Smaller = first.">Order</Lbl>
+                  <NumberInput value={a.sort} onChange={v => update({ sort: v })} />
+                </div>
+              </Row>
+              <Lbl hint="The actual quote. Keep it under ~30 words for readability.">Quote</Lbl>
+              <TextArea value={a.quote} onChange={v => update({ quote: v })} rows={4} />
+              <Lbl hint="Show this testimonial on the site, or hide it.">Show on the site</Lbl>
+              <VisibleToggle value={a.visible} onChange={v => update({ visible: v })} />
+            </Card>
+            <div style={{ display: "flex", gap: ".8rem", alignItems: "center" }}>
+              <SaveBar onSave={save} label="Save quote" />
+              <button onClick={() => remove(a.id)} type="button" style={delBtn}>Delete</button>
+            </div>
           </div>
-        </div>
-      ) : <p style={{ opacity: .6 }}>No testimonial selected.</p>}
+        ) : <p style={{ opacity: .6 }}>No testimonial selected.</p>}
+      </div>
     </div>
   );
 }
 
-const newBtn: React.CSSProperties = { width: "100%", background: "transparent", color: "#cdc7b8", border: "1px dashed #2a2a28", borderRadius: 8, padding: ".5rem .9rem", cursor: "pointer", fontSize: ".85rem", marginBottom: ".7rem" };
-const itemBtn: React.CSSProperties = { display: "block", width: "100%", textAlign: "left", border: 0, borderRadius: 8, padding: ".55rem .7rem", fontSize: ".9rem", cursor: "pointer", marginBottom: 2 };
-const saveBtn: React.CSSProperties = { background: "var(--color-bronze, #8c6a3d)", color: "var(--color-bone, #f4ede0)", border: 0, borderRadius: 10, padding: ".75rem 1.4rem", fontWeight: 600, cursor: "pointer" };
-const delBtn: React.CSSProperties = { background: "transparent", color: "#a77070", border: 0, padding: ".5rem .9rem", cursor: "pointer", fontSize: ".9rem" };
+const newBtn: React.CSSProperties = {
+  width: "100%", background: "transparent", color: "#cdc7b8",
+  border: "1px dashed #2a2a28", borderRadius: 8, padding: ".5rem .9rem",
+  cursor: "pointer", fontSize: ".85rem", marginBottom: ".7rem", fontFamily: "inherit",
+};
+const itemBtn: React.CSSProperties = {
+  display: "block", width: "100%", textAlign: "left",
+  border: 0, borderRadius: 8, padding: ".55rem .7rem",
+  fontSize: ".9rem", cursor: "pointer", marginBottom: 2, fontFamily: "inherit",
+};
+const delBtn: React.CSSProperties = {
+  background: "transparent", color: "#a77070", border: 0,
+  padding: ".5rem .9rem", cursor: "pointer", fontSize: ".9rem", fontFamily: "inherit",
+};

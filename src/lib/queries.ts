@@ -6,8 +6,16 @@ import { db, getSite } from "./db";
 import {
   HeroData, PhilosophyData, VisitData, ContactData, MetaData,
   Program, Instructor, GalleryItem, Testimonial, FAQItem, HoursItem, NavLink,
+  InstagramFeedItem,
   normalizeHero,
 } from "./types";
+
+const DEFAULT_INSTAGRAM_FEED: InstagramFeedItem[] = [
+  { url: "https://www.instagram.com/p/DAb4F7GPGxC/", caption: "" },
+  { url: "https://www.instagram.com/p/DFAOXcKuaFt/", caption: "" },
+  { url: "https://www.instagram.com/p/C-mxJD9uIXr/", caption: "" },
+  { url: "https://www.instagram.com/p/C3LDR_yuUE0/", caption: "" },
+];
 
 const DEFAULT_HERO: HeroData = {
   eyebrow: "Bellaire, Texas · Established academy",
@@ -148,4 +156,12 @@ export function getNavLinks(): NavLink[] {
   return db.prepare(
     `SELECT * FROM nav_links ORDER BY sort ASC, id ASC`
   ).all() as NavLink[];
+}
+
+export function getInstagramFeed(): InstagramFeedItem[] {
+  const raw = getSite<InstagramFeedItem[] | unknown>("instagram_feed", DEFAULT_INSTAGRAM_FEED);
+  if (!Array.isArray(raw)) return DEFAULT_INSTAGRAM_FEED;
+  return raw
+    .filter((x): x is InstagramFeedItem => !!x && typeof (x as { url?: unknown }).url === "string")
+    .map(x => ({ url: x.url, caption: typeof x.caption === "string" ? x.caption : "" }));
 }
